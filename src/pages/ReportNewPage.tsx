@@ -483,6 +483,9 @@ export default function ReportNewPage() {
                         <TileLayer
                           attribution='&copy; OpenStreetMap contributors'
                           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          errorTileUrl="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Crect width='256' height='256' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999' font-family='Arial' font-size='14'%3EНет интернета%3C/text%3E%3C/svg%3E"
+                          maxNativeZoom={19}
+                          maxZoom={19}
                         />
                         <MapClickHandler
                           onPick={(lat, lng) => setLocation({ lat, lng })}

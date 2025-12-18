@@ -1,5 +1,14 @@
 html, body, #root { height: 100%; margin: 0; }
 
+/* Системные шрифты как fallback если Google Fonts не загрузились */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 /* Dark Mode Support */
 body.dark-mode {
   background-color: #121212;
