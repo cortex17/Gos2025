@@ -1,0 +1,227 @@
+/* Login Page Container */
+.loginPage {
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #2d1b4e 100%);
+  overflow: hidden;
+  padding: 20px;
+}
+
+/* Radar Container - positioned in top right */
+.radarContainer {
+  position: absolute;
+  top: -200px;
+  right: -200px;
+  width: 700px;
+  height: 700px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@media (max-width: 768px) {
+  .radarContainer {
+    width: 520px;
+    height: 520px;
+    top: -150px;
+    right: -150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .radarContainer {
+    width: 400px;
+    height: 400px;
+    top: -100px;
+    right: -100px;
+  }
+}
+
+/* Radar Circle - main container */
+.radarCircle {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  background: radial-gradient(circle at center, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+}
+
+/* Radar Rings - concentric circles */
+.radarRing {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  opacity: 0.6;
+}
+
+/* Radar Axes - cross lines */
+.radarAxis {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(102, 126, 234, 0.3) 20%,
+    rgba(102, 126, 234, 0.3) 80%,
+    transparent 100%
+  );
+  transform-origin: center;
+  transform: translate(-50%, -50%);
+}
+
+.radarAxis::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(102, 126, 234, 0.3) 20%,
+    rgba(102, 126, 234, 0.3) 80%,
+    transparent 100%
+  );
+  transform: translate(-50%, -50%);
+}
+
+/* Radar Sweep - rotating beam */
+.radarSweep {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 50%;
+  height: 50%;
+  transform-origin: top left;
+  background: conic-gradient(
+    from 0deg,
+    rgba(102, 126, 234, 0.6) 0deg,
+    rgba(118, 75, 162, 0.8) 10deg,
+    rgba(102, 126, 234, 0.4) 20deg,
+    transparent 20deg
+  );
+  border-radius: 0 0 0 100%;
+  animation: radarRotate 4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes radarRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Ping Points - animated dots */
+.pingPoint {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(102, 126, 234, 0.9);
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.8);
+  transform: translate(-50%, -50%);
+  animation: pingRipple 2s ease-out infinite;
+}
+
+.pingPoint::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(102, 126, 234, 0.6);
+  transform: translate(-50%, -50%);
+  animation: pingRipple 2s ease-out infinite;
+  animation-delay: inherit;
+}
+
+.pingPoint::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(102, 126, 234, 0.3);
+  transform: translate(-50%, -50%);
+  animation: pingRipple 2s ease-out infinite;
+  animation-delay: calc(inherit + 0.3s);
+}
+
+@keyframes pingRipple {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(4);
+    opacity: 0;
+  }
+}
+
+/* Glass Card Container */
+.cardContainer {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* Glass Card - glassmorphism effect */
+.glassCard {
+  backdrop-filter: blur(14px) saturate(180%);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .glassCard {
+    background: rgba(26, 31, 58, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .cardContainer {
+    max-width: 90%;
+  }
+  
+  .loginPage {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cardContainer {
+    max-width: 95%;
+  }
+  
+  .glassCard {
+    border-radius: 16px;
+  }
+}
+
+
+
