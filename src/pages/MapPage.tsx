@@ -546,7 +546,7 @@ export default function MapPage() {
                 value={stats.total}
                 subtitle={`${stats.verified} подтверждено`}
                 icon={<Warning />}
-                color="#667eea"
+                color="#2196f3"
                 progress={stats.total > 0 ? (stats.verified / stats.total) * 100 : 0}
               />
             </Grid>

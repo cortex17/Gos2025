@@ -7,8 +7,6 @@ import {
   Container,
   Grid,
   Button,
-  AppBar,
-  Toolbar,
   Backdrop,
   IconButton,
   Chip,
@@ -16,7 +14,6 @@ import {
   Alert,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../store/auth";
 import { useNotificationsStore } from "../store/notifications";
 import {
   LocationOn,
@@ -24,7 +21,6 @@ import {
   Security,
   LocalFireDepartment,
   Map as MapIcon,
-  AddAlert,
   RadioButtonChecked,
   RadioButtonUnchecked,
   Close,
@@ -32,6 +28,7 @@ import {
   TrendingDown,
   LocationSearching,
 } from "@mui/icons-material";
+import Header from "../components/Header";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapContainer, TileLayer, Marker, Circle } from "react-leaflet";
 import { leafletFix } from "../components/LeafletFix";
@@ -132,7 +129,6 @@ function formatTimeAgo(date: Date): string {
 
 export default function PulsePage() {
   const nav = useNavigate();
-  const { token } = useAuthStore();
   const { wsConnected } = useNotificationsStore();
   const [geoEnabled, setGeoEnabled] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -247,25 +243,6 @@ export default function PulsePage() {
     return { incidents, accidents };
   }, [geoEnabled]);
 
-  const handleQuickAction = (action: "sos" | "report" | "map") => {
-    if (!token) {
-      if (action === "map") {
-        nav("/login?redirectTo=/map");
-      } else if (action === "report") {
-        nav("/login?redirectTo=/report/new");
-      } else if (action === "sos") {
-        alert("Для отправки SOS необходимо войти в систему");
-      }
-      return;
-    }
-
-    if (action === "map") {
-      nav("/map");
-    } else if (action === "report") {
-      nav("/report/new");
-    }
-  };
-
   const handleOnboardingNext = () => {
     if (onboardingStep < 2) {
       setOnboardingStep(onboardingStep + 1);
@@ -291,112 +268,49 @@ export default function PulsePage() {
   const center = userLocation || [43.2220, 76.8512] as [number, number];
 
   return (
-    <Box sx={{ width: "100%", minHeight: "100vh", bgcolor: "background.default" }}>
-      {/* Operational Bar */}
-      <AppBar 
-        position="sticky" 
+    <Box sx={{ width: "100%", minHeight: "100vh", bgcolor: "background.default", display: "flex", flexDirection: "column" }}>
+      <Header showAuthButtons={true} />
+      
+      {/* Индикатор LIVE/OFF для Pulse */}
+      <Box 
         sx={{ 
-          bgcolor: "rgba(0, 0, 0, 0.85)",
-          backdropFilter: "blur(10px)",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+          position: "fixed", 
+          top: { xs: 80, sm: 90 }, 
+          right: 16, 
+          zIndex: 999, // Ниже хедера, но выше контента
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          bgcolor: "background.paper",
+          px: 2,
+          py: 1,
+          borderRadius: 2,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
         }}
       >
-        <Toolbar sx={{ justifyContent: "space-between", flexWrap: "wrap", gap: 2, py: 1 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              {wsConnected ? (
-                <RadioButtonChecked sx={{ color: "#4caf50", fontSize: 16 }} />
-              ) : (
-                <RadioButtonUnchecked sx={{ color: "#f44336", fontSize: 16 }} />
-              )}
-              <Typography variant="body2" sx={{ fontWeight: 600, color: "white" }}>
-                {wsConnected ? "LIVE" : "OFF"}
-              </Typography>
-            </Box>
-            {geoEnabled ? (
-              <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.9)", fontWeight: 500 }}>
-                В радиусе 500м: {nearbyStats.incidents} инцидентов, {nearbyStats.accidents} ДТП
-              </Typography>
-            ) : (
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<LocationSearching />}
-                onClick={requestGeolocation}
-                sx={{ 
-                  textTransform: "none",
-                  borderColor: "rgba(255, 255, 255, 0.3)",
-                  color: "white",
-                  "&:hover": {
-                    borderColor: "rgba(255, 255, 255, 0.5)",
-                  },
-                }}
-              >
-                Разрешить геолокацию
-              </Button>
-            )}
-          </Box>
-          
-          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<AddAlert />}
-              onClick={() => handleQuickAction("sos")}
-              sx={{ 
-                textTransform: "none",
-                borderColor: "rgba(255, 255, 255, 0.3)",
-                color: "white",
-                "&:hover": {
-                  borderColor: "rgba(255, 255, 255, 0.5)",
-                },
-              }}
-            >
-              SOS
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Warning />}
-              onClick={() => {
-                if (userLocation) {
-                  nav(`/report/new?lat=${userLocation.lat}&lng=${userLocation.lng}`);
-                } else {
-                  handleQuickAction("report");
-                }
-              }}
-              sx={{ 
-                textTransform: "none",
-                borderColor: "rgba(255, 255, 255, 0.3)",
-                color: "white",
-                "&:hover": {
-                  borderColor: "rgba(255, 255, 255, 0.5)",
-                },
-              }}
-            >
-              Создать отчет
-            </Button>
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<MapIcon />}
-              onClick={() => handleQuickAction("map")}
-              sx={{ 
-                textTransform: "none",
-                bgcolor: "white",
-                color: "#1a1a1a",
-                "&:hover": {
-                  bgcolor: "rgba(255, 255, 255, 0.9)",
-                },
-              }}
-            >
-              Открыть карту
-            </Button>
-          </Box>
-        </Toolbar>
-      </AppBar>
+        {wsConnected ? (
+          <RadioButtonChecked sx={{ color: "#4caf50", fontSize: 16, animation: "pulse 2s infinite" }} />
+        ) : (
+          <RadioButtonUnchecked sx={{ color: "#f44336", fontSize: 16 }} />
+        )}
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontWeight: 700, 
+            fontSize: { xs: "0.7rem", sm: "0.875rem" },
+          }}
+        >
+          {wsConnected ? "LIVE" : "OFF"}
+        </Typography>
+      </Box>
 
-      <Container maxWidth="xl" sx={{ py: { xs: 3, md: 4 } }}>
+      <Container 
+        maxWidth="xl" 
+        sx={{ 
+          py: { xs: 3, md: 4 },
+          pt: { xs: "90px", sm: "100px" }, // Отступ сверху, чтобы контент не перекрывался хедером
+        }}
+      >
         {/* Situation Now Banner */}
         {geoEnabled ? (
           <Alert

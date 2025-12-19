@@ -65,7 +65,7 @@ export default function ReportsListPage() {
               sx={{
                 fontWeight: 800,
                 mb: 1,
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                background: "linear-gradient(135deg, #2196f3 0%, #1976d2 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}

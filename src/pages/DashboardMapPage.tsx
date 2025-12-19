@@ -322,13 +322,14 @@ export default function DashboardMapPage() {
 
 
   return (
-    <Box sx={{ width: "100%" }}>
+    <Box sx={{ width: "100%", display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       {/* Hero Section */}
       <Box
         sx={{
           width: "100%",
-          py: { xs: 6, md: 10 },
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          pt: { xs: 6, md: 10 },
+          pb: { xs: 6, md: 10 },
+          background: "linear-gradient(135deg, #2196f3 0%, #1976d2 100%)",
           color: "white",
           position: "relative",
           overflow: "hidden",
@@ -416,7 +417,7 @@ export default function DashboardMapPage() {
             value={stats.total}
             subtitle={`${stats.verified} подтверждено`}
             icon={<Warning />}
-            color="#667eea"
+            color="#2196f3"
             progress={stats.total > 0 ? (stats.verified / stats.total) * 100 : 0}
           />
           <StatsCard

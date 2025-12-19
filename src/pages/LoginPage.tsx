@@ -79,7 +79,7 @@ export default function LoginPage() {
                   sx={{
                     fontWeight: 800,
                     mb: 1,
-                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    background: "linear-gradient(135deg, #2196f3 0%, #1976d2 100%)",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
                   }}
@@ -133,9 +133,9 @@ export default function LoginPage() {
                   sx={{
                     mt: 1,
                     py: 1.5,
-                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    background: "linear-gradient(135deg, #2196f3 0%, #1976d2 100%)",
                     "&:hover": {
-                      background: "linear-gradient(135deg, #764ba2 0%, #667eea 100%)",
+                      background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
                     },
                     "&:disabled": {
                       opacity: 0.6,

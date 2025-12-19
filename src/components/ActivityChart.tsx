@@ -39,7 +39,7 @@ export default function ActivityChart({ data, height = 120 }: ActivityChartProps
               <Box
                 sx={{
                   width: "100%",
-                  background: `linear-gradient(180deg, #667eea 0%, #764ba2 100%)`,
+                  background: `linear-gradient(180deg, #2196f3 0%, #1976d2 100%)`,
                   borderRadius: "4px 4px 0 0",
                   minHeight: 4,
                   position: "relative",

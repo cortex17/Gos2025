@@ -93,7 +93,7 @@ export default function IncidentDetailPage() {
         sx={{
           width: "100%",
           py: { xs: 6, md: 8 },
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          background: "linear-gradient(135deg, #2196f3 0%, #1976d2 100%)",
           color: "white",
         }}
       >

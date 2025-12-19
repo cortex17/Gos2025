@@ -9,7 +9,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
   padding: 20px;
 }
 
@@ -41,7 +41,7 @@
 }
 
 .dropZone:hover {
-  border-color: #667eea;
+  border-color: #2196f3;
   background-color: rgba(102, 126, 234, 0.05);
 }
 

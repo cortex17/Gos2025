@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { Box, Button, Card, CardContent, TextField, Typography, Alert, Tabs, Tab } from "@mui/material";
+import { Box, Button, Card, CardContent, TextField, Typography, Alert, Tabs, Tab, Divider } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
 import { loginApi, registerApi } from "../api/auth";
 import { useAuthStore } from "../store/auth";
 import { motion } from "framer-motion";
+import { AdminPanelSettings, Person } from "@mui/icons-material";
 import styles from "./AuthPage.module.css";
+import Header from "../components/Header";
 
 export default function AuthPage() {
   const nav = useNavigate();
@@ -98,9 +100,47 @@ export default function AuthPage() {
     }
   }
 
+  // Быстрый вход как админ
+  async function quickLoginAsAdmin() {
+    setLoading(true);
+    setErr(null);
+    try {
+      const data = await loginApi("admin@test.com", "admin123");
+      setAuth(data.access_token, data.role as "user" | "admin");
+      nav("/admin");
+    } catch (e: any) {
+      setErr("Ошибка быстрого входа. Попробуйте войти через форму.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Быстрый вход как пользователь
+  async function quickLoginAsUser() {
+    setLoading(true);
+    setErr(null);
+    try {
+      const data = await loginApi("student1@test.com", "student123");
+      setAuth(data.access_token, data.role as "user" | "admin");
+      nav("/pulse");
+    } catch (e: any) {
+      setErr("Ошибка быстрого входа. Попробуйте войти через форму.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <Box className={styles.authPage}>
-      {/* Night City + Radar Background */}
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <Header showAuthButtons={false} />
+      <Box 
+        className={styles.authPage} 
+        sx={{ 
+          flex: 1,
+          pt: { xs: "70px", sm: "80px" }, // Отступ сверху, чтобы контент не перекрывался хедером
+        }}
+      >
+        {/* Night City + Radar Background */}
       <Box className={styles.radarContainer}>
         <Box className={styles.radarCircle}>
           {/* Radar Rings */}
@@ -291,28 +331,87 @@ export default function AuthPage() {
                 </Button>
               </Box>
 
-              <Box sx={{ mt: 3, textAlign: "center" }}>
+              <Box sx={{ mt: 3 }}>
+                <Divider sx={{ mb: 2, borderColor: "rgba(255, 255, 255, 0.2)" }}>
+                  <Typography variant="caption" sx={{ color: "rgba(255, 255, 255, 0.7)", px: 1 }}>
+                    Быстрый вход
+                  </Typography>
+                </Divider>
+                <Box sx={{ display: "flex", gap: 1.5, flexDirection: { xs: "column", sm: "row" } }}>
+                  <Button
+                    variant="outlined"
+                    size="medium"
+                    onClick={quickLoginAsAdmin}
+                    disabled={loading}
+                    startIcon={<AdminPanelSettings />}
+                    fullWidth
+                    sx={{
+                      textTransform: "none",
+                      borderColor: "rgba(255, 255, 255, 0.3)",
+                      color: "rgba(255, 255, 255, 0.9)",
+                      fontWeight: 600,
+                      "&:hover": {
+                        borderColor: "rgba(244, 67, 54, 0.8)",
+                        background: "rgba(244, 67, 54, 0.2)",
+                        color: "white",
+                      },
+                      "&:disabled": {
+                        borderColor: "rgba(255, 255, 255, 0.1)",
+                        color: "rgba(255, 255, 255, 0.3)",
+                      },
+                    }}
+                  >
+                    Войти как Админ
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="medium"
+                    onClick={quickLoginAsUser}
+                    disabled={loading}
+                    startIcon={<Person />}
+                    fullWidth
+                    sx={{
+                      textTransform: "none",
+                      borderColor: "rgba(255, 255, 255, 0.3)",
+                      color: "rgba(255, 255, 255, 0.9)",
+                      fontWeight: 600,
+                      "&:hover": {
+                        borderColor: "rgba(33, 150, 243, 0.8)",
+                        background: "rgba(33, 150, 243, 0.2)",
+                        color: "white",
+                      },
+                      "&:disabled": {
+                        borderColor: "rgba(255, 255, 255, 0.1)",
+                        color: "rgba(255, 255, 255, 0.3)",
+                      },
+                    }}
+                  >
+                    Войти как Пользователь
+                  </Button>
+                </Box>
                 <Button
-                  variant="outlined"
-                  size="medium"
+                  variant="text"
+                  size="small"
                   onClick={() => nav("/pulse")}
                   fullWidth
                   sx={{
                     textTransform: "none",
-                    borderColor: "rgba(255, 255, 255, 0.3)",
-                    color: "rgba(255, 255, 255, 0.9)",
+                    color: "rgba(255, 255, 255, 0.7)",
+                    mt: 1.5,
+                    fontSize: "0.875rem",
                     "&:hover": {
-                      borderColor: "rgba(255, 255, 255, 0.5)",
-                      background: "rgba(255, 255, 255, 0.1)",
+                      color: "rgba(255, 255, 255, 0.9)",
+                      background: "rgba(255, 255, 255, 0.05)",
                     },
                   }}
                 >
-                  Перейти в режим просмотра
+                  Продолжить без входа
                 </Button>
               </Box>
             </CardContent>
           </Card>
         </motion.div>
+      </Box>
       </Box>
     </Box>
   );

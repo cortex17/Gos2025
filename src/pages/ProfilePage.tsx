@@ -223,8 +223,8 @@ export default function ProfilePage() {
           pt: { xs: 8, md: 12 },
           pb: { xs: 6, md: 10 },
           background: role === "admin"
-            ? "linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff6b6b 100%)"
-            : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            ? "linear-gradient(135deg, #2196f3 0%, #1976d2 50%, #ff6b6b 100%)"
+            : "linear-gradient(135deg, #2196f3 0%, #1976d2 100%)",
           overflow: "hidden",
           "&::before": {
             content: '""',
@@ -379,7 +379,7 @@ export default function ProfilePage() {
                 whileHover="hover"
                 sx={{
                   height: "100%",
-                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  background: "linear-gradient(135deg, #2196f3 0%, #1976d2 100%)",
                   color: "white",
                   position: "relative",
                   overflow: "hidden",

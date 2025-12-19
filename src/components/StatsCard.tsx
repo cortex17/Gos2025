@@ -16,7 +16,7 @@ export default function StatsCard({
   value, 
   subtitle, 
   icon, 
-  color = "#667eea",
+  color = "#2196f3",
   progress,
 }: StatsCardProps) {
   return (

@@ -25,7 +25,7 @@ export default function SimpleNav() {
               flexGrow: 1, 
               cursor: "pointer",
               fontWeight: 700,
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              background: "linear-gradient(135deg, #2196f3 0%, #1976d2 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}
