@@ -21,6 +21,7 @@ import {
   ToggleButtonGroup,
   Backdrop,
   Collapse,
+  Badge,
 } from "@mui/material";
 import { MapContainer, Marker, Popup, TileLayer, useMapEvents, Circle } from "react-leaflet";
 import L from "leaflet";
@@ -70,12 +71,26 @@ function ClickHandler({ onPick }: { onPick: (lat: number, lng: number) => void }
   return null;
 }
 
-// Компонент для создания анимированного маркера с учетом времени
-function createAnimatedIcon(severity: number, createdAt: string) {
+// Компонент для создания анимированного маркера с иконками
+function createAnimatedIcon(severity: number, createdAt: string, type: ReportType) {
   const getColor = () => {
     if (severity >= 4) return "#f44336"; // Красный - опасность
     if (severity >= 3) return "#ff9800"; // Оранжевый - предупреждение
     return "#4caf50"; // Зеленый - все в порядке
+  };
+
+  // Иконки для разных типов инцидентов
+  const getIcon = () => {
+    switch (type) {
+      case "no_light":
+        return "💡";
+      case "dogs":
+        return "🐕";
+      case "ice":
+        return "🧊";
+      default:
+        return "⚠️";
+    }
   };
 
   // Вычисляем яркость на основе времени (новые инциденты ярче)
@@ -85,6 +100,7 @@ function createAnimatedIcon(severity: number, createdAt: string) {
   const brightness = Math.max(0.6, 1 - ageHours / 48); // Затухание за 48 часов
   
   const color = getColor();
+  const icon = getIcon();
   const baseSize = 28;
   const size = baseSize + (severity * 2); // Размер зависит от severity
   const pulseSpeed = severity >= 4 ? "1.5s" : severity >= 3 ? "2s" : "3s"; // Быстрее для опасных
@@ -108,6 +124,7 @@ function createAnimatedIcon(severity: number, createdAt: string) {
           border-radius: 50%;
           border: 2px solid ${color};
           opacity: 0.6;
+          animation: ringPulse ${pulseSpeed} ease-out infinite;
         "></div>
         <div class="marker-core" style="
           width: ${size}px;
@@ -120,7 +137,11 @@ function createAnimatedIcon(severity: number, createdAt: string) {
           z-index: 1;
           opacity: ${brightness};
           filter: brightness(${brightness});
-        "></div>
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: ${size * 0.4}px;
+        ">${icon}</div>
       </div>
     `,
     iconSize: [size + 20, size + 20],
@@ -167,6 +188,8 @@ export default function MapPage() {
   const [statsExpanded, setStatsExpanded] = useState(true);
   const [showMapHint, setShowMapHint] = useState(true);
   const [recommendationsExpanded, setRecommendationsExpanded] = useState(true);
+  const [newIncidentsCount, setNewIncidentsCount] = useState(0);
+  const [notificationBadgeVisible, setNotificationBadgeVisible] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
 
   useEffect(() => leafletFix(), []);
@@ -181,45 +204,69 @@ export default function MapPage() {
 
   // Добавляем стили анимации
   useEffect(() => {
-    if (!document.getElementById("marker-animations")) {
-      const style = document.createElement("style");
-      style.id = "marker-animations";
-      style.textContent = `
+    // Удаляем старый стиль, если есть
+    const oldStyle = document.getElementById("marker-animations");
+    if (oldStyle) oldStyle.remove();
+
+    const style = document.createElement("style");
+    style.id = "marker-animations";
+    style.textContent = `
+        .custom-animated-marker {
+          animation: markerAppear 0.5s ease-out;
+        }
         .custom-animated-marker .marker-container {
           transition: transform 0.3s ease;
         }
         .custom-animated-marker:hover .marker-container {
-          transform: scale(1.3);
+          transform: scale(1.4) !important;
           z-index: 1000 !important;
         }
         .custom-animated-marker .marker-core {
           animation: markerPulse 2s ease-in-out infinite;
           cursor: pointer;
-          transition: transform 0.2s, box-shadow 0.2s;
+          transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
         }
         .custom-animated-marker:hover .marker-core {
-          transform: scale(1.15);
-          box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+          transform: scale(1.2);
+          box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+          filter: brightness(1.2);
         }
         .custom-animated-marker .marker-pulse-ring {
           animation: ringPulse 2s ease-out infinite;
         }
+        @keyframes markerAppear {
+          0% { 
+            opacity: 0;
+            transform: scale(0);
+          }
+          50% {
+            transform: scale(1.2);
+          }
+          100% { 
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
         @keyframes markerPulse {
           0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.1); }
+          50% { transform: scale(1.15); }
         }
         @keyframes ringPulse {
           0% { transform: scale(1); opacity: 0.6; }
-          100% { transform: scale(1.8); opacity: 0; }
+          100% { transform: scale(2); opacity: 0; }
         }
         @keyframes pulse {
           0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(1.2); }
+          50% { opacity: 0.6; transform: scale(1.3); }
         }
       `;
-      document.head.appendChild(style);
-    }
+    document.head.appendChild(style);
   }, []);
+
+  const { data: reports = [], isLoading, isError, refetch } = useQuery({
+    queryKey: ["reports", "approved"],
+    queryFn: listApprovedReports,
+  });
 
   // Генерация Live Feed событий
   useEffect(() => {
@@ -237,17 +284,27 @@ export default function MapPage() {
         id: `feed_${Date.now()}`,
         time: new Date(),
       };
-      setLiveFeedEvents((prev) => [newEvent, ...prev].slice(0, 10));
+      setLiveFeedEvents((prev) => {
+        const updated = [newEvent, ...prev].slice(0, 10);
+        setNewIncidentsCount((count) => count + 1);
+        setNotificationBadgeVisible(true);
+        return updated;
+      });
       setLastUpdate(new Date());
     }, 8000 + Math.random() * 4000); // 8-12 секунд
 
     return () => clearInterval(interval);
   }, []);
 
-  const { data: reports = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ["reports", "approved"],
-    queryFn: listApprovedReports,
-  });
+  // Обновление статистики в реальном времени
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+      setLastUpdate(new Date());
+    }, 30000); // Обновление каждые 30 секунд
+
+    return () => clearInterval(interval);
+  }, [refetch]);
 
   // Connect WebSocket
   useEffect(() => {
@@ -267,20 +324,7 @@ export default function MapPage() {
 
   const center = useMemo(() => userLocation || [42.9, 71.36] as [number, number], [userLocation]);
 
-  const filteredReports = useMemo(() => {
-    let filtered = reports;
-    if (filters.length > 0) {
-      filtered = filtered.filter(r => filters.includes(r.type));
-    }
-    if (userLocation) {
-      filtered = filtered.map(r => ({
-        ...r,
-        distance: calculateDistance(userLocation.lat, userLocation.lng, r.lat, r.lng),
-      })).sort((a, b) => (a.distance || 0) - (b.distance || 0));
-    }
-    return filtered;
-  }, [reports, filters, userLocation]);
-
+  // Функция расчета расстояния должна быть объявлена ДО использования
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
     const R = 6371000;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -295,9 +339,23 @@ export default function MapPage() {
     return R * c;
   };
 
+  const filteredReports = useMemo(() => {
+    let filtered = reports;
+    if (filters.length > 0) {
+      filtered = filtered.filter(r => filters.includes(r.type));
+    }
+    if (userLocation) {
+      filtered = filtered.map(r => ({
+        ...r,
+        distance: calculateDistance(userLocation.lat, userLocation.lng, r.lat, r.lng),
+      })).sort((a, b) => (a.distance || 0) - (b.distance || 0));
+    }
+    return filtered;
+  }, [reports, filters, userLocation]);
+
   const handleFilterToggle = (type: ReportType) => {
-    setFilters(prev =>
-      prev.includes(type)
+    setFilters(prev => 
+      prev.includes(type) 
         ? prev.filter(t => t !== type)
         : [...prev, type]
     );
@@ -394,15 +452,15 @@ export default function MapPage() {
     if (!userLocation) return null;
     
     const nearbyHighSeverity = filteredReports.filter(
-      (r) => r.severity >= 4 && r.distance && r.distance < 500
+      (r) => r.severity >= 4 && (r as Report & { distance?: number }).distance && (r as Report & { distance?: number }).distance! < 500
     );
     
     const nearbyDogs = filteredReports.filter(
-      (r) => r.type === "dogs" && r.distance && r.distance < 300
+      (r) => r.type === "dogs" && (r as Report & { distance?: number }).distance && (r as Report & { distance?: number }).distance! < 300
     );
     
     const nearbyNoLight = filteredReports.filter(
-      (r) => r.type === "no_light" && r.distance && r.distance < 200
+      (r) => r.type === "no_light" && (r as Report & { distance?: number }).distance && (r as Report & { distance?: number }).distance! < 200
     );
 
     const recommendations: string[] = [];
@@ -539,9 +597,9 @@ export default function MapPage() {
       )}
 
       <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        {/* Map - 72% */}
-        <Box sx={{ width: "72%", position: "relative" }}>
-          {/* Status Panel */}
+      {/* Map - 72% */}
+      <Box sx={{ width: "72%", position: "relative" }}>
+          {/* Status Panel with Live Updates */}
           <Paper
             sx={{
               position: "absolute",
@@ -573,12 +631,54 @@ export default function MapPage() {
               <IconButton
                 size="small"
                 onClick={handleRefreshMap}
-                sx={{ p: 0.5 }}
+                sx={{
+                  p: 0.5,
+                  transition: "transform 0.3s ease",
+                  "&:hover": {
+                    transform: "rotate(180deg)",
+                  },
+                }}
               >
                 <Refresh sx={{ fontSize: 16 }} />
               </IconButton>
             </Tooltip>
           </Paper>
+
+          {/* Notification Badge */}
+          <Tooltip title={`${newIncidentsCount} новых инцидентов`} arrow>
+            <IconButton
+              onClick={() => {
+                setNotificationBadgeVisible(false);
+                setNewIncidentsCount(0);
+              }}
+              sx={{
+                position: "absolute",
+                top: 16,
+                right: 80,
+                zIndex: 1000,
+                bgcolor: "rgba(255, 255, 255, 0.95)",
+                backdropFilter: "blur(10px)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                "&:hover": {
+                  bgcolor: "rgba(255, 255, 255, 1)",
+                  transform: "scale(1.1)",
+                },
+                transition: "all 0.3s ease",
+              }}
+            >
+              <Badge
+                badgeContent={notificationBadgeVisible ? newIncidentsCount : 0}
+                color="error"
+                sx={{
+                  "& .MuiBadge-badge": {
+                    animation: notificationBadgeVisible ? "pulse 2s infinite" : "none",
+                  },
+                }}
+              >
+                <Notifications />
+              </Badge>
+            </IconButton>
+          </Tooltip>
 
           {/* Layer Controls */}
           <Paper
@@ -623,6 +723,9 @@ export default function MapPage() {
           center={center}
           zoom={13}
           style={{ height: "100%", width: "100%" }}
+          zoomControl={true}
+          scrollWheelZoom={true}
+          doubleClickZoom={true}
           ref={(map) => {
             if (map) mapRef.current = map;
           }}
@@ -676,47 +779,47 @@ export default function MapPage() {
           )}
 
           {!isLoading && !isError && filteredReports.map((r: Report & { distance?: number }) => {
-            const icon = createAnimatedIcon(r.severity, r.createdAt);
+            const icon = createAnimatedIcon(r.severity, r.createdAt, r.type);
             return (
               <Marker key={r.id} position={[r.lat, r.lng]} icon={icon}>
-                <Popup>
-                  <FlashCard triggerKey={r.id}>
+              <Popup>
+                <FlashCard triggerKey={r.id}>
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 250 }}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <DangerPulse severity={r.severity} size={32} />
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                          {getTypeLabel(r.type)}
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Уровень: {r.severity}/5
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <DangerPulse severity={r.severity} size={32} />
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        {getTypeLabel(r.type)}
                       </Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Уровень: {r.severity}/5
+                    </Typography>
                       {r.description && (
                         <Typography variant="body2" sx={{ mt: 0.5 }}>
                           {r.description}
                         </Typography>
                       )}
-                      {r.distance && (
-                        <Typography variant="caption" color="text.secondary">
-                          Расстояние: {Math.round(r.distance)} м
-                        </Typography>
-                      )}
+                    {r.distance && (
+                      <Typography variant="caption" color="text.secondary">
+                        Расстояние: {Math.round(r.distance)} м
+                      </Typography>
+                    )}
                       <Typography variant="caption" color="text.secondary">
                         {formatTimeAgo(r.createdAt)} • {new Date(r.createdAt).toLocaleString("ru-RU")}
                       </Typography>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        onClick={() => nav(`/incidents/${r.id}`)}
-                        sx={{ mt: 1 }}
-                        fullWidth
-                      >
-                        Подробнее
-                      </Button>
-                    </Box>
-                  </FlashCard>
-                </Popup>
-              </Marker>
+                    <Button 
+                      size="small" 
+                      variant="contained" 
+                      onClick={() => nav(`/incidents/${r.id}`)}
+                      sx={{ mt: 1 }}
+                      fullWidth
+                    >
+                      Подробнее
+                    </Button>
+                  </Box>
+                </FlashCard>
+              </Popup>
+            </Marker>
             );
           })}
         </MapContainer>
@@ -755,53 +858,74 @@ export default function MapPage() {
           </Paper>
         )}
 
-        {/* Quick Report Button */}
-        <Button
-          variant="contained"
-          startIcon={<ReportIcon />}
-          onClick={handleQuickReport}
-          sx={{
-            position: "absolute",
-            bottom: 24,
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 1000,
-            borderRadius: 3,
-            px: 3,
-            py: 1.5,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-            textTransform: "none",
-          }}
-        >
-          Создать отчет
-        </Button>
+        {/* Quick Report Button with Animation */}
+        <Tooltip title="Нажмите, чтобы создать отчет об инциденте" arrow>
+          <Button
+            variant="contained"
+            startIcon={<ReportIcon />}
+            onClick={handleQuickReport}
+            sx={{
+              position: "absolute",
+              bottom: 24,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 1000,
+              borderRadius: 3,
+              px: 3,
+              py: 1.5,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+              textTransform: "none",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "translateX(-50%) scale(1.05)",
+                boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
+                bgcolor: "primary.dark",
+              },
+              "&:active": {
+                transform: "translateX(-50%) scale(0.98)",
+              },
+            }}
+          >
+            Создать отчет
+          </Button>
+        </Tooltip>
 
-        {/* Feedback Button */}
-        <IconButton
-          onClick={() => setFeedbackOpen(true)}
-          sx={{
-            position: "absolute",
-            bottom: 24,
-            right: 24,
-            zIndex: 1000,
-            bgcolor: "primary.main",
-            color: "white",
-            "&:hover": { bgcolor: "primary.dark" },
-            boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-          }}
-        >
-          <Feedback />
-        </IconButton>
+        {/* Feedback Button with Animation */}
+        <Tooltip title="Обратная связь" arrow>
+          <IconButton
+            onClick={() => setFeedbackOpen(true)}
+            sx={{
+              position: "absolute",
+              bottom: 24,
+              right: 24,
+              zIndex: 1000,
+              bgcolor: "primary.main",
+              color: "white",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                bgcolor: "primary.dark",
+                transform: "scale(1.1) rotate(5deg)",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+              },
+              "&:active": {
+                transform: "scale(0.95)",
+              },
+            }}
+          >
+            <Feedback />
+          </IconButton>
+        </Tooltip>
 
         <FloatingSosButton position={picked || userLocation} />
         </Box>
       </Box>
 
       {/* Sidebar - 28% */}
-      <Paper
-        sx={{
-          width: "28%",
-          display: "flex",
+      <Paper 
+        sx={{ 
+          width: "28%", 
+          display: "flex", 
           flexDirection: "column",
           borderLeft: "1px solid",
           borderColor: "divider",
@@ -815,16 +939,27 @@ export default function MapPage() {
           </Typography>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
             {(["no_light", "dogs", "ice", "other"] as ReportType[]).map((type) => (
-              <Chip
+              <Tooltip
                 key={type}
+                title={`${filters.includes(type) ? "Скрыть" : "Показать"} инциденты типа "${getTypeLabel(type)}"`}
+                arrow
+              >
+                <Chip
                 label={getTypeLabel(type)}
                 onClick={() => handleFilterToggle(type)}
                 color={filters.includes(type) ? "primary" : "default"}
                 sx={{
                   bgcolor: filters.includes(type) ? getTypeColor(type) : undefined,
                   color: filters.includes(type) ? "white" : undefined,
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      transform: "scale(1.05)",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                    },
                 }}
               />
+              </Tooltip>
             ))}
           </Box>
         </Box>
@@ -939,7 +1074,7 @@ export default function MapPage() {
               {mockIncidents.length} найдено
             </Typography>
           </Box>
-
+          
           <List sx={{ p: 0 }}>
             {mockIncidents.map((incident, index) => (
               <Box key={incident.id}>
@@ -954,9 +1089,9 @@ export default function MapPage() {
                     <Typography variant="subtitle2" sx={{ fontWeight: 600, flex: 1 }}>
                       {getTypeLabel(incident.type)}
                     </Typography>
-                    <Chip
-                      label={incident.verified ? "verified" : "guest"}
-                      size="small"
+                    <Chip 
+                      label={incident.verified ? "verified" : "guest"} 
+                      size="small" 
                       color={incident.verified ? "success" : "warning"}
                       sx={{ height: 20, fontSize: "0.65rem" }}
                     />

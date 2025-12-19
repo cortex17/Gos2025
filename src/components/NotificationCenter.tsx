@@ -5,9 +5,6 @@ import {
   Badge,
   Drawer,
   Typography,
-  List,
-  ListItem,
-  Divider,
   Chip,
   Button,
   Card,
@@ -24,7 +21,6 @@ import {
   Report,
   LocalPolice,
   CarCrash,
-  Settings,
   CheckCircle,
   Cancel,
   Help,
@@ -218,19 +214,6 @@ function getTypeIcon(type: NotificationType) {
     default:
       return <Report />;
   }
-}
-
-function getTypeLabel(type: NotificationType): string {
-  const labels: Record<NotificationType, string> = {
-    sos: "SOS",
-    lighting: "Освещение",
-    dog: "Собаки",
-    crime: "Преступление",
-    ice: "Гололед",
-    car_crash: "ДТП",
-    road_block: "Перекрытие",
-  };
-  return labels[type] || type;
 }
 
 export default function NotificationCenter() {
@@ -432,19 +415,19 @@ export default function NotificationCenter() {
           ) : (
             <Stack spacing={1}>
               {filteredNotifications.map((notif) => (
-                <motion.div
-                  key={notif.id}
+              <motion.div
+                key={notif.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                >
+              >
                   <Card
-                    sx={{
+                  sx={{
                       borderRadius: 2,
                       border: notif.kind === "sos" ? "2px solid" : "1px solid",
                       borderColor: notif.kind === "sos" ? "error.main" : "divider",
                       boxShadow: notif.kind === "sos" ? "0 2px 8px rgba(244, 67, 54, 0.2)" : "none",
-                    }}
-                  >
+                  }}
+                >
                     <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
                       {/* Header */}
                       <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1, mb: 1 }}>
@@ -470,9 +453,9 @@ export default function NotificationCenter() {
                             <Typography variant="caption" color="text.secondary">
                               {notif.timeAgo}
                             </Typography>
-                            <Chip
+                  <Chip
                               label={notif.level === "verified" ? "verified" : "guest"}
-                              size="small"
+                    size="small"
                               color={notif.level === "verified" ? "success" : "default"}
                               sx={{ height: 20, fontSize: "0.65rem" }}
                             />
@@ -530,7 +513,7 @@ export default function NotificationCenter() {
                       </Box>
                     </CardContent>
                   </Card>
-                </motion.div>
+              </motion.div>
               ))}
             </Stack>
           )}

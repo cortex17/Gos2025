@@ -29,7 +29,29 @@ function getFakeUsers(): FakeUser[] {
       return JSON.parse(stored);
     }
   } catch {}
-  return [];
+  
+  // Инициализация с тестовым админом, если нет пользователей
+  const defaultAdmin: FakeUser = {
+    id: "fake_admin_1",
+    email: "admin@test.com",
+    password: "admin123",
+    name: "Админ Админов",
+    role: "admin"
+  };
+  
+  const defaultUsers: FakeUser[] = [
+    defaultAdmin,
+    {
+      id: "fake_user_1",
+      email: "student1@test.com",
+      password: "student123",
+      name: "Студент 1",
+      role: "user"
+    }
+  ];
+  
+  localStorage.setItem(FAKE_USERS_KEY, JSON.stringify(defaultUsers));
+  return defaultUsers;
 }
 
 function saveFakeUser(user: FakeUser): void {
@@ -51,6 +73,8 @@ function saveFakeToken(email: string, token: string, role: "user" | "admin"): vo
   const tokens = JSON.parse(localStorage.getItem(FAKE_TOKENS_KEY) || "{}");
   tokens[token] = { email, role };
   localStorage.setItem(FAKE_TOKENS_KEY, JSON.stringify(tokens));
+  // Сохраняем email для использования в профиле
+  localStorage.setItem("sr_email", email);
 }
 
 export async function loginApi(email: string, password: string) {
@@ -78,6 +102,9 @@ export async function loginApi(email: string, password: string) {
   const { data: tokenData } = await http.post("/auth/login", { email, password });
   const access_token = tokenData.access_token || tokenData.token;
   
+  // Сохраняем email для профиля
+  localStorage.setItem("sr_email", email);
+  
   // Получаем информацию о пользователе для роли
   try {
     const axios = (await import("axios")).default;
@@ -86,6 +113,10 @@ export async function loginApi(email: string, password: string) {
       headers: { Authorization: `Bearer ${access_token}` }
     });
     const { data: userData } = await tempHttp.get("/auth/me");
+    // Сохраняем email из ответа, если есть
+    if (userData.email) {
+      localStorage.setItem("sr_email", userData.email);
+    }
     return {
       access_token,
       role: mapBackendRoleToFrontend(userData.role)

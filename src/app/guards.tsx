@@ -10,6 +10,9 @@ export function RequireAuth() {
 export function RequireAdmin() {
   const { token, role } = useAuthStore();
   if (!token) return <Navigate to="/login" replace />;
-  if (role !== "admin") return <Navigate to="/dashboard" replace />;
+  if (role !== "admin") {
+    console.warn("[RequireAdmin] Access denied. Current role:", role);
+    return <Navigate to="/dashboard" replace />;
+  }
   return <Outlet />;
 }

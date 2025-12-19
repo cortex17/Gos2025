@@ -40,9 +40,21 @@ export default function AuthPage() {
     setLoading(true);
     try {
       const data = await loginApi(email, password);
+      console.log("[AuthPage] Login successful, role:", data.role);
       setAuth(data.access_token, data.role as "user" | "admin");
-      nav(data.role === "admin" ? "/admin" : "/pulse");
+      
+      // Проверяем сохраненную роль
+      const savedRole = localStorage.getItem("sr_role");
+      console.log("[AuthPage] Saved role in localStorage:", savedRole);
+      
+      if (data.role === "admin") {
+        console.log("[AuthPage] Redirecting to /admin");
+        nav("/admin");
+      } else {
+        nav("/pulse");
+      }
     } catch (e: any) {
+      console.error("[AuthPage] Login error:", e);
       setErr((e?.message || e?.response?.data?.message) ?? "Ошибка входа. Проверьте данные.");
     } finally {
       setLoading(false);

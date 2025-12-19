@@ -31,8 +31,6 @@ import {
   TrendingUp,
   TrendingDown,
   LocationSearching,
-  CheckCircle,
-  Cancel,
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapContainer, TileLayer, Marker, Circle } from "react-leaflet";
@@ -135,7 +133,7 @@ function formatTimeAgo(date: Date): string {
 export default function PulsePage() {
   const nav = useNavigate();
   const { token } = useAuthStore();
-  const { wsConnected, sosEvents } = useNotificationsStore();
+  const { wsConnected } = useNotificationsStore();
   const [geoEnabled, setGeoEnabled] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);

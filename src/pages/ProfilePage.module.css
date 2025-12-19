@@ -96,6 +96,15 @@
   border-bottom: none;
 }
 
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .headerContent {
@@ -112,4 +121,5 @@
     width: 100%;
   }
 }
+
 
