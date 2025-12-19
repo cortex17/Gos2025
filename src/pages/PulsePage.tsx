@@ -295,9 +295,9 @@ export default function PulsePage() {
   return (
     <Box sx={{ width: "100%", minHeight: "100vh", bgcolor: "background.default" }}>
       {/* Operational Bar */}
-      <AppBar
-        position="sticky"
-        sx={{
+      <AppBar 
+        position="sticky" 
+        sx={{ 
           bgcolor: "rgba(0, 0, 0, 0.85)",
           backdropFilter: "blur(10px)",
           borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
@@ -325,7 +325,7 @@ export default function PulsePage() {
                 variant="outlined"
                 startIcon={<LocationSearching />}
                 onClick={requestGeolocation}
-                sx={{
+                sx={{ 
                   textTransform: "none",
                   borderColor: "rgba(255, 255, 255, 0.3)",
                   color: "white",
@@ -338,14 +338,14 @@ export default function PulsePage() {
               </Button>
             )}
           </Box>
-
+          
           <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
             <Button
               size="small"
               variant="outlined"
               startIcon={<AddAlert />}
               onClick={() => handleQuickAction("sos")}
-              sx={{
+              sx={{ 
                 textTransform: "none",
                 borderColor: "rgba(255, 255, 255, 0.3)",
                 color: "white",
@@ -360,8 +360,14 @@ export default function PulsePage() {
               size="small"
               variant="outlined"
               startIcon={<Warning />}
-              onClick={() => handleQuickAction("report")}
-              sx={{
+              onClick={() => {
+                if (userLocation) {
+                  nav(`/report/new?lat=${userLocation.lat}&lng=${userLocation.lng}`);
+                } else {
+                  handleQuickAction("report");
+                }
+              }}
+              sx={{ 
                 textTransform: "none",
                 borderColor: "rgba(255, 255, 255, 0.3)",
                 color: "white",
@@ -377,7 +383,7 @@ export default function PulsePage() {
               variant="contained"
               startIcon={<MapIcon />}
               onClick={() => handleQuickAction("map")}
-              sx={{
+              sx={{ 
                 textTransform: "none",
                 bgcolor: "white",
                 color: "#1a1a1a",
@@ -393,6 +399,37 @@ export default function PulsePage() {
       </AppBar>
 
       <Container maxWidth="xl" sx={{ py: { xs: 3, md: 4 } }}>
+        {/* Situation Now Banner */}
+        {geoEnabled ? (
+          <Alert
+            severity="info"
+            icon={<LocationOn />}
+            sx={{ mb: 3, borderRadius: 2 }}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+              В радиусе 500м: {nearbyStats.incidents} инцидентов, {nearbyStats.accidents} ДТП
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Рекомендуем маршрут через освещённые улицы
+            </Typography>
+          </Alert>
+        ) : (
+          <Alert
+            severity="warning"
+            icon={<LocationSearching />}
+            action={
+              <Button size="small" onClick={requestGeolocation}>
+                Разрешить
+              </Button>
+            }
+            sx={{ mb: 3, borderRadius: 2 }}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              Включите геолокацию → покажем опасности рядом
+            </Typography>
+          </Alert>
+        )}
+
         <Grid container spacing={3}>
           {/* KPI Cards with Trends */}
           <Grid item xs={12} md={4}>
@@ -467,16 +504,60 @@ export default function PulsePage() {
             </Card>
           </Grid>
 
-          {/* Live Feed - 2 Columns */}
-          <Grid item xs={12}>
+          {/* Hot Zones */}
+          <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
                 <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                  Live Feed
+                  Опасные зоны за 24ч
+                </Typography>
+                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                  <Chip
+                    label="Район Абая"
+                    color="error"
+                    size="small"
+                    sx={{ fontWeight: 600 }}
+                  />
+                  <Chip
+                    label="Район Сатпаева"
+                    color="warning"
+                    size="small"
+                    sx={{ fontWeight: 600 }}
+                  />
+                  <Chip
+                    label="Район Достык"
+                    color="warning"
+                    size="small"
+                    sx={{ fontWeight: 600 }}
+                  />
+                </Box>
+                <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: "divider" }}>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Top type
+                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      {getTypeLabel(stats.topType)}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      (42% от всех)
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Live Feed - 2 Columns */}
+          <Grid item xs={12} md={6}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                  Nearby Threats
                 </Typography>
                 <Grid container spacing={2}>
                   {/* Left: MiniMapPreview */}
-                  <Grid item xs={12} md={5}>
+                  <Grid item xs={12} md={6}>
                     <Box sx={{ height: 260, borderRadius: 2, overflow: "hidden", border: 1, borderColor: "divider" }}>
                       <MapContainer
                         center={center}
@@ -525,9 +606,9 @@ export default function PulsePage() {
                   </Grid>
 
                   {/* Right: NearbyList */}
-                  <Grid item xs={12} md={7}>
+                  <Grid item xs={12} md={6}>
                     <Stack spacing={1.5} sx={{ maxHeight: 260, overflowY: "auto", pr: 1 }}>
-                      {mockNearby.map((incident) => (
+                      {mockNearby.slice(0, 4).map((incident) => (
                         <Card
                           key={incident.id}
                           sx={{
@@ -604,9 +685,9 @@ export default function PulsePage() {
                                 {event.title}
                               </Typography>
                               <Box sx={{ display: "flex", gap: 1, alignItems: "center", flexWrap: "wrap" }}>
-                                <Typography variant="caption" color="text.secondary">
+                              <Typography variant="caption" color="text.secondary">
                                   {event.timeAgo}
-                                </Typography>
+                              </Typography>
                                 <Chip
                                   label={event.level === "verified" ? "verified" : "guest"}
                                   size="small"
