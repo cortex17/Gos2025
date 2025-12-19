@@ -3,9 +3,6 @@ import { Box, Button, Card, CardContent, TextField, Typography, Alert, Tabs, Tab
 import { useNavigate, useLocation } from "react-router-dom";
 import { loginApi, registerApi } from "../api/auth";
 import { useAuthStore } from "../store/auth";
-
-// Экспортируем getState для проверки роли вне компонента
-const getAuthState = () => useAuthStore.getState();
 import { motion } from "framer-motion";
 import { AdminPanelSettings, Person } from "@mui/icons-material";
 import styles from "./AuthPage.module.css";

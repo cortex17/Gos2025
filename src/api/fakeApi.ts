@@ -1,4 +1,5 @@
 import { Report } from "./reports";
+import { User, Analytics } from "./admin";
 
 const STORAGE_KEY = "sosmap_reports";
 
@@ -173,6 +174,143 @@ export const fakeApi = {
     saveReports(reports);
 
     return report;
+  },
+
+  // Admin functions
+  async getUsers(): Promise<User[]> {
+    await delay();
+    
+    if (shouldError()) {
+      throw new Error("Failed to load users");
+    }
+
+    // Получаем пользователей из auth fake API
+    const FAKE_USERS_KEY = "sosmap_fake_users";
+    try {
+      const stored = localStorage.getItem(FAKE_USERS_KEY);
+      if (stored) {
+        const users = JSON.parse(stored);
+        return users.map((u: any) => ({
+          id: u.id,
+          email: u.email,
+          role: u.role,
+          reputation: Math.floor(Math.random() * 100),
+          isBlocked: false,
+          createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+        }));
+      }
+    } catch {}
+
+    // Возвращаем дефолтных пользователей
+    return [
+      {
+        id: "fake_admin_1",
+        email: "admin@test.com",
+        role: "admin" as const,
+        reputation: 100,
+        isBlocked: false,
+        createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: "fake_user_1",
+        email: "student1@test.com",
+        role: "user" as const,
+        reputation: 75,
+        isBlocked: false,
+        createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ];
+  },
+
+  async blockUser(userId: string): Promise<User> {
+    await delay();
+    
+    if (shouldError()) {
+      throw new Error("Failed to block user");
+    }
+
+    const users = await fakeApi.getUsers();
+    const user = users.find(u => u.id === userId);
+    
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    user.isBlocked = true;
+    // В реальном приложении сохраняли бы в БД
+    return user;
+  },
+
+  async unblockUser(userId: string): Promise<User> {
+    await delay();
+    
+    if (shouldError()) {
+      throw new Error("Failed to unblock user");
+    }
+
+    const users = await fakeApi.getUsers();
+    const user = users.find(u => u.id === userId);
+    
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    user.isBlocked = false;
+    return user;
+  },
+
+  async getAnalytics(): Promise<Analytics> {
+    await delay();
+    
+    if (shouldError()) {
+      throw new Error("Failed to load analytics");
+    }
+
+    const reports = getStoredReports();
+    const totalReports = reports.length;
+    const pendingReports = reports.filter(r => r.status === "pending").length;
+    const approvedReports = reports.filter(r => r.status === "approved").length;
+    const rejectedReports = reports.filter(r => r.status === "rejected").length;
+
+    // Группируем по зонам для highRiskZones
+    const zoneMap = new Map<string, { lat: number; lng: number; count: number; totalSeverity: number }>();
+    
+    reports.forEach(r => {
+      // Округляем координаты для группировки
+      const zoneKey = `${Math.round(r.lat * 100) / 100}_${Math.round(r.lng * 100) / 100}`;
+      const existing = zoneMap.get(zoneKey);
+      
+      if (existing) {
+        existing.count++;
+        existing.totalSeverity += r.severity;
+      } else {
+        zoneMap.set(zoneKey, {
+          lat: r.lat,
+          lng: r.lng,
+          count: 1,
+          totalSeverity: r.severity,
+        });
+      }
+    });
+
+    const highRiskZones = Array.from(zoneMap.values())
+      .filter(zone => zone.count >= 2) // Минимум 2 инцидента в зоне
+      .map(zone => ({
+        lat: zone.lat,
+        lng: zone.lng,
+        count: zone.count,
+        avgSeverity: zone.totalSeverity / zone.count,
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5); // Топ 5 зон
+
+    return {
+      totalReports,
+      pendingReports,
+      approvedReports,
+      rejectedReports,
+      highRiskZones,
+    };
   },
 };
 
