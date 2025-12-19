@@ -3,6 +3,9 @@ import { Box, Button, Card, CardContent, TextField, Typography, Alert, Tabs, Tab
 import { useNavigate, useLocation } from "react-router-dom";
 import { loginApi, registerApi } from "../api/auth";
 import { useAuthStore } from "../store/auth";
+
+// Экспортируем getState для проверки роли вне компонента
+const getAuthState = () => useAuthStore.getState();
 import { motion } from "framer-motion";
 import { AdminPanelSettings, Person } from "@mui/icons-material";
 import styles from "./AuthPage.module.css";
@@ -106,9 +109,30 @@ export default function AuthPage() {
     setErr(null);
     try {
       const data = await loginApi("admin@test.com", "admin123");
+      console.log("[QuickLoginAdmin] Login data:", data);
       setAuth(data.access_token, data.role as "user" | "admin");
-      nav("/admin");
+      
+      // Проверяем сохраненную роль
+      const savedRole = localStorage.getItem("sr_role");
+      const savedToken = localStorage.getItem("sr_token");
+      console.log("[QuickLoginAdmin] Saved role:", savedRole, "token:", savedToken ? "exists" : "missing");
+      
+      // Небольшая задержка для обновления store
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Проверяем роль в store
+      const authState = useAuthStore.getState();
+      const currentRole = authState.role;
+      console.log("[QuickLoginAdmin] Current role in store:", currentRole, "Full state:", authState);
+      
+      if (currentRole === "admin") {
+        nav("/admin");
+      } else {
+        console.error("[QuickLoginAdmin] Role mismatch! Expected admin, got:", currentRole);
+        setErr("Ошибка: роль админа не установлена. Попробуйте войти через форму.");
+      }
     } catch (e: any) {
+      console.error("[QuickLoginAdmin] Error:", e);
       setErr("Ошибка быстрого входа. Попробуйте войти через форму.");
     } finally {
       setLoading(false);
