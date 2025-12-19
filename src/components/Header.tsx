@@ -357,6 +357,34 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
               </Tooltip>
             )}
 
+            {/* Быстрый вход в админ панель (всегда видимый) */}
+            <Tooltip title="Быстрый вход в админ панель" arrow>
+              <MotionButton
+                variant="contained"
+                color="error"
+                size="small"
+                onClick={() => nav("/admin-login")}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 700,
+                  px: 1.5,
+                  py: 0.5,
+                  minWidth: "auto",
+                  fontSize: "0.75rem",
+                  display: { xs: "none", sm: "flex" },
+                  alignItems: "center",
+                  gap: 0.5,
+                }}
+              >
+                <AdminPanelSettings sx={{ fontSize: 16 }} />
+                <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
+                  Админ
+                </Box>
+              </MotionButton>
+            </Tooltip>
+
             {/* Переключатель темы */}
             <ThemeToggle />
 

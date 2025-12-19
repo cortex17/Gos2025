@@ -13,11 +13,13 @@ import ProfilePage from "../pages/ProfilePage";
 import AdminPage from "../pages/AdminPage";
 import IncidentsListPage from "../pages/IncidentsListPage";
 import IncidentDetailPage from "../pages/IncidentDetailPage";
+import QuickAdminLogin from "../pages/QuickAdminLogin";
 
 export const router = createBrowserRouter([
   { path: "/", element: <Navigate to="/pulse" replace /> },
   { path: "/login", element: <AuthPage /> },
   { path: "/register", element: <AuthPage /> },
+  { path: "/admin-login", element: <QuickAdminLogin /> }, // Быстрый вход в админ панель
   { path: "/pulse", element: <PulsePage /> }, // Публичный - read-only для гостей
 
   {
