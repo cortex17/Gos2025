@@ -89,7 +89,7 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
         left: 0,
         right: 0,
         width: "100%",
-        zIndex: "1000 !important", // Высокий z-index для отображения поверх всех элементов
+        zIndex: "9999 !important", // Очень высокий z-index для отображения поверх всех элементов
         opacity: "1 !important", // Всегда видимый
         visibility: "visible !important", // Всегда видимый
         display: "block !important", // Всегда отображается
