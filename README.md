@@ -150,17 +150,49 @@ SOSMap/
 
 ## 🔐 Authentication
 
-### Test Credentials (if using backend)
+### Test Credentials (Mock API - Default)
 
-**Admin:**
-- Email: `admin@example.com`
+**Admin (Quick Login Available):**
+- Email: `admin@test.com`
 - Password: `admin123`
+- **Quick Access**: Click "Войти как Админ" button on login page
+- **Admin Panel**: `/admin` - Full moderation tools, user management, analytics
 
-**User:**
-- Email: `user@example.com`
-- Password: `user123`
+**User (Quick Login Available):**
+- Email: `student1@test.com`
+- Password: `student123`
+- **Quick Access**: Click "Войти как Пользователь" button on login page
 
-*Note: Credentials depend on your backend setup*
+### Quick Login Feature
+
+On the login page (`/login`), you can use quick login buttons:
+- **"Войти как Админ"** - Instantly login as admin and go to admin panel
+- **"Войти как Пользователь"** - Instantly login as regular user
+- **"Продолжить без входа"** - Browse public pages without login
+
+### Admin Panel Access
+
+1. **Via Quick Login** (Recommended):
+   - Go to `/login`
+   - Click "Войти как Админ" button
+   - Automatically redirected to `/admin`
+
+2. **Via Login Form**:
+   - Go to `/login`
+   - Enter: `admin@test.com` / `admin123`
+   - Click "Войти"
+   - Navigate to `/admin` from header
+
+3. **Direct URL** (if already logged in as admin):
+   - Navigate to `/admin`
+   - Protected route - requires admin role
+
+### Admin Panel Features
+
+- ✅ **Incident Moderation**: Approve/reject/delete incidents
+- ✅ **User Management**: View, block/unblock users
+- ✅ **Analytics Dashboard**: Statistics and charts
+- ✅ **Real-time Updates**: Live incident monitoring
 
 ## 🔌 API Integration
 
