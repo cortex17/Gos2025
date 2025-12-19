@@ -32,20 +32,37 @@ function getStoredRole(): Role | null {
   }
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   token: getStoredToken(),
   role: getStoredRole(),
   setAuth: (token, role) => {
     try {
+      console.log("[AuthStore] setAuth called with token:", token ? "exists" : "missing", "role:", role);
+      
+      // Сохраняем в localStorage
       localStorage.setItem(LS_TOKEN, token);
       localStorage.setItem(LS_ROLE, role);
-      console.log("[AuthStore] setAuth called with role:", role);
+      
+      // Обновляем store синхронно
       set({ token, role });
       
       // Дополнительная проверка после установки
       const verifyToken = localStorage.getItem(LS_TOKEN);
       const verifyRole = localStorage.getItem(LS_ROLE);
-      console.log("[AuthStore] Verification - token:", verifyToken ? "saved" : "missing", "role:", verifyRole);
+      const currentState = get();
+      
+      console.log("[AuthStore] After setAuth:");
+      console.log("  - localStorage token:", verifyToken ? "saved" : "missing");
+      console.log("  - localStorage role:", verifyRole);
+      console.log("  - store token:", currentState.token ? "exists" : "missing");
+      console.log("  - store role:", currentState.role);
+      
+      // Если что-то не совпадает, принудительно обновляем
+      if (verifyRole !== role || currentState.role !== role) {
+        console.warn("[AuthStore] Mismatch detected, forcing update");
+        localStorage.setItem(LS_ROLE, role);
+        set({ token, role });
+      }
     } catch (error) {
       console.error("[AuthStore] Error saving auth:", error);
     }

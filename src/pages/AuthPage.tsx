@@ -105,32 +105,61 @@ export default function AuthPage() {
     setLoading(true);
     setErr(null);
     try {
-      const data = await loginApi("admin@test.com", "admin123");
-      console.log("[QuickLoginAdmin] Login data:", data);
-      setAuth(data.access_token, data.role as "user" | "admin");
+      console.log("[QuickLoginAdmin] Starting admin login...");
       
-      // Проверяем сохраненную роль
+      // Очищаем старые данные перед входом
+      localStorage.removeItem("sr_token");
+      localStorage.removeItem("sr_role");
+      
+      const data = await loginApi("admin@test.com", "admin123");
+      console.log("[QuickLoginAdmin] Login API response:", data);
+      
+      if (!data || !data.access_token || !data.role) {
+        throw new Error("Invalid login response");
+      }
+      
+      if (data.role !== "admin") {
+        console.error("[QuickLoginAdmin] Role is not admin! Got:", data.role);
+        throw new Error("User is not an admin");
+      }
+      
+      // Устанавливаем авторизацию
+      setAuth(data.access_token, data.role);
+      
+      // Принудительно проверяем сохранение
       const savedRole = localStorage.getItem("sr_role");
       const savedToken = localStorage.getItem("sr_token");
-      console.log("[QuickLoginAdmin] Saved role:", savedRole, "token:", savedToken ? "exists" : "missing");
+      console.log("[QuickLoginAdmin] After setAuth - savedRole:", savedRole, "savedToken:", savedToken ? "exists" : "missing");
       
-      // Небольшая задержка для обновления store
-      await new Promise(resolve => setTimeout(resolve, 100));
+      if (savedRole !== "admin") {
+        console.error("[QuickLoginAdmin] Role not saved correctly! Expected 'admin', got:", savedRole);
+        // Пытаемся сохранить вручную
+        localStorage.setItem("sr_role", "admin");
+        localStorage.setItem("sr_token", data.access_token);
+        console.log("[QuickLoginAdmin] Manually saved role as admin");
+      }
+      
+      // Даем время для обновления store и навигации
+      await new Promise(resolve => setTimeout(resolve, 200));
       
       // Проверяем роль в store
       const authState = useAuthStore.getState();
-      const currentRole = authState.role;
-      console.log("[QuickLoginAdmin] Current role in store:", currentRole, "Full state:", authState);
+      console.log("[QuickLoginAdmin] Store state:", authState);
       
-      if (currentRole === "admin") {
+      // Проверяем из localStorage напрямую
+      const finalRole = localStorage.getItem("sr_role");
+      console.log("[QuickLoginAdmin] Final role check:", finalRole);
+      
+      if (finalRole === "admin" || authState.role === "admin") {
+        console.log("[QuickLoginAdmin] Redirecting to /admin");
         nav("/admin");
       } else {
-        console.error("[QuickLoginAdmin] Role mismatch! Expected admin, got:", currentRole);
+        console.error("[QuickLoginAdmin] Role mismatch! Store:", authState.role, "localStorage:", finalRole);
         setErr("Ошибка: роль админа не установлена. Попробуйте войти через форму.");
       }
     } catch (e: any) {
       console.error("[QuickLoginAdmin] Error:", e);
-      setErr("Ошибка быстрого входа. Попробуйте войти через форму.");
+      setErr(e?.message || "Ошибка быстрого входа. Попробуйте войти через форму.");
     } finally {
       setLoading(false);
     }
